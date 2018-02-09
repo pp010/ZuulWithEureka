@@ -1,0 +1,29 @@
+server:
+  port: 8765
+spring:
+  application:
+    name: zuulapp
+zuul:
+  routes:
+    helloapp:
+      path: /helloapp/**
+      serviceId: helloapp
+hystrix:
+  command:
+    helloapp:
+      circuitBreaker:
+        requestVolumeThreshold: 10
+        sleepWindowInMilliseconds: 10000
+      execution:
+        timeout:
+          enable: false
+        isolation:
+          thread:
+            timeoutInMilliseconds: 600000
+ribbon:
+  eureka:
+    enabled: true
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
