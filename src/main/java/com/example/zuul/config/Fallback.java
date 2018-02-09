@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Fallback implements FallbackProvider {
 
+
 	@Override
 	public String getRoute() {
 		return "*";
@@ -21,67 +22,42 @@ public class Fallback implements FallbackProvider {
 
 	@Override
 	public ClientHttpResponse fallbackResponse() {
-		return new ClientHttpResponse() {
-			@Override
-			public HttpStatus getStatusCode() throws IOException {
-				return HttpStatus.OK;
-			}
-
-			@Override
-			public int getRawStatusCode() throws IOException {
-				return 200;
-			}
-
-			@Override
-			public String getStatusText() throws IOException {
-				return "OK";
-			}
-
-			@Override
-			public void close() {
-
-			}
-
-			@Override
-			public InputStream getBody() throws IOException {
-				return new ByteArrayInputStream("fallback-test1".getBytes());
-			}
-
-			@Override
-			public HttpHeaders getHeaders() {
-				HttpHeaders headers = new HttpHeaders();
-				headers.setContentType(MediaType.APPLICATION_JSON);
-				return headers;
-			}
-		};
+		return response(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@Override
-	public ClientHttpResponse fallbackResponse(Throwable cause) {
+	public ClientHttpResponse fallbackResponse(final Throwable cause) {
+		if (cause instanceof HystrixTimeoutException) {
+			return response(HttpStatus.GATEWAY_TIMEOUT);
+		} else {
+			return fallbackResponse();
+		}
+	}
+
+	private ClientHttpResponse response(final HttpStatus status) {
 		return new ClientHttpResponse() {
 			@Override
 			public HttpStatus getStatusCode() throws IOException {
-				return HttpStatus.OK;
+				return status;
 			}
 
 			@Override
 			public int getRawStatusCode() throws IOException {
-				return 200;
+				return status.value();
 			}
 
 			@Override
 			public String getStatusText() throws IOException {
-				return "OK";
+				return status.getReasonPhrase();
 			}
 
 			@Override
 			public void close() {
-
 			}
 
 			@Override
 			public InputStream getBody() throws IOException {
-				return new ByteArrayInputStream("fallback-test2".getBytes());
+				return new ByteArrayInputStream("fallback".getBytes());
 			}
 
 			@Override
